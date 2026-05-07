@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:worker": "tsx src/worker/index.ts",
+    "worker": "tsx src/worker/index.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
