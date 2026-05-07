@@ -36,7 +36,7 @@ const customerNav: NavItem[] = [
 ];
 
 const adminNav: NavItem[] = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/gonderimler", label: "Kampanyalar", icon: BarChart3 },
   { href: "/admin/rehberler", label: "Rehberler", icon: BookOpen },
   { href: "/admin/kara-liste", label: "Kara Liste", icon: ShieldAlert },

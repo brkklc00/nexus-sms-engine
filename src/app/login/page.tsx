@@ -4,7 +4,11 @@ import { UserRole } from "@prisma/client";
 import { LoginForm } from "@/components/login-form";
 import { authOptions } from "@/lib/auth";
 
-export default async function Home() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   const session = await getServerSession(authOptions);
   if (session?.user?.id) {
     if ((session.user.role ?? UserRole.customer) === UserRole.admin) {
@@ -13,9 +17,10 @@ export default async function Home() {
     redirect("/dashboard");
   }
 
+  const params = await searchParams;
   return (
     <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_right,_rgba(99,102,241,0.25),_transparent_35%),#020617] p-4 text-slate-100">
-      <LoginForm />
+      <LoginForm initialError={params.error} />
     </div>
   );
 }

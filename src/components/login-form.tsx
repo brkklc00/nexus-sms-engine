@@ -1,17 +1,26 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { AuthCard } from "@/components/auth-card";
 
-export function LoginForm() {
+function resolveErrorMessage(errorCode?: string | null) {
+  if (!errorCode) return null;
+  if (errorCode === "CredentialsSignin") return "E-posta veya sifre hatali.";
+  if (errorCode === "Configuration") return "Sistem giris ayari eksik. Lutfen yoneticiyle iletisime gecin.";
+  return "Giris yapilamadi. Lutfen bilgilerinizi kontrol edin.";
+}
+
+export function LoginForm({ initialError }: { initialError?: string }) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(resolveErrorMessage(initialError));
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -21,14 +30,16 @@ export function LoginForm() {
     const result = await signIn("credentials", {
       email,
       password,
-      redirect: true,
+      redirect: false,
       callbackUrl: "/yonlendir",
     });
 
-    if (result?.error) {
-      setError("E-posta veya sifre hatali.");
+    if (result?.error || !result?.ok) {
+      setError(resolveErrorMessage(result?.error) ?? "Giris yapilamadi. Lutfen tekrar deneyin.");
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+    router.push("/yonlendir");
   }
 
   return (
