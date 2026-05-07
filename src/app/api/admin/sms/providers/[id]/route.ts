@@ -4,6 +4,7 @@ import { parseJson } from "@/lib/validate";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { encryptSecret } from "@/lib/crypto";
+import { writeAuditLog } from "@/lib/audit";
 
 const schema = z.object({
   name: z.string().min(2).optional(),
@@ -28,6 +29,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     data: {
       ...parsed.data,
       ...(parsed.data.token ? { tokenEncrypted: encryptSecret(parsed.data.token) } : {}),
+    },
+  });
+  await writeAuditLog({
+    userId: auth.user.id,
+    action: "PROVIDER_UPDATE",
+    entityType: "SmsProvider",
+    entityId: provider.id,
+    metadata: {
+      ...parsed.data,
+      token: parsed.data.token ? "***" : undefined,
     },
   });
   return ok(provider);

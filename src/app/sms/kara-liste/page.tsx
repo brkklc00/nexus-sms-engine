@@ -1,17 +1,28 @@
-import { PagePlaceholder } from "@/components/page-placeholder";
+import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function KaraListePage() {
   return (
-    <PagePlaceholder
+    <ResourceTablePage
       title="SMS Kara Liste"
-      description="Tekli veya toplu numara ekleyin, kaynak/not tutun, arama filtreleme ve sayfalama ile listeleri yonetin."
-      items={[
-        "Tekli numara ekleme",
-        "Toplu numara import",
-        "Neden ve kaynak bilgisi",
-        "Arama ve sayfalama",
-        "Toplu silme islemleri",
-        "Import/Export islemleri",
+      description="Kara liste kayitlarinizi canli API baglantisiyla goruntuleyin."
+      endpoint="/api/sms/blacklist"
+      columns={[
+        { key: "phoneE164", label: "Telefon" },
+        { key: "source", label: "Kaynak" },
+        { key: "reason", label: "Sebep" },
+        {
+          key: "createdAt",
+          label: "Tarih",
+          render: (row) => new Date(String(row.createdAt)).toLocaleString("tr-TR"),
+        },
+      ]}
+      actions={[
+        {
+          label: "Sil",
+          method: "DELETE",
+          href: (row) => `/api/sms/blacklist/${row.id as string}`,
+          confirmText: "Bu numarayi kara listeden silmek istediginize emin misiniz?",
+        },
       ]}
     />
   );

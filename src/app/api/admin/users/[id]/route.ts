@@ -3,6 +3,7 @@ import { ok } from "@/lib/http";
 import { parseJson } from "@/lib/validate";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
+import { writeAuditLog } from "@/lib/audit";
 import { z } from "zod";
 
 const schema = z.object({
@@ -29,6 +30,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         ? { passwordHash: await hashPassword(parsed.data.resetPassword) }
         : {}),
     },
+  });
+  await writeAuditLog({
+    userId: auth.user.id,
+    action: "USER_UPDATE",
+    entityType: "User",
+    entityId: user.id,
+    metadata: parsed.data,
   });
   return ok(user);
 }

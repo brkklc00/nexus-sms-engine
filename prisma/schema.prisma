@@ -79,6 +79,7 @@ model User {
   createdCreditLogs    SmsCreditTransaction[]  @relation("CreditCreator")
   auditLogs            AuditLog[]
   otpHistory           SmsOtpHistory[]
+  updatedSystemSettings SystemSetting[]       @relation("SettingsUpdatedBy")
   accounts             Account[]
   sessions             Session[]
 
@@ -334,4 +335,16 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  type        String?
+  description String?
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+
+  updatedBy User? @relation("SettingsUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 }

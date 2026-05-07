@@ -26,8 +26,8 @@ export function PagePlaceholder({
         ))}
       </div>
       <EmptyState
-        title="Canli veri baglantisi hazir"
-        description="Bu ekran API ve tablo bilesenleri ile gercek zamanli operasyon paneline baglanacak sekilde hazirlandi."
+        title="Panel hazir"
+        description="Bu ekran canli API verileriyle baglanacak sekilde tasarlandi."
       />
     </div>
   );

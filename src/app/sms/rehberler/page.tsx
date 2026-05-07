@@ -1,17 +1,22 @@
-import { PagePlaceholder } from "@/components/page-placeholder";
+import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function SmsRehberPage() {
   return (
-    <PagePlaceholder
+    <ResourceTablePage
       title="SMS Rehberleri"
-      description="Rehber olusturun, CSV/TXT ile numara ice aktarimi yapin, normalize edin ve istatistikleri paginated tabloda yonetin."
-      items={[
-        "Rehber olusturma ve duzenleme",
-        "CSV/TXT ve manuel metin import",
-        "E.164 normalizasyonu ve ulke tespiti",
-        "Liste ici ve global dedupe",
-        "Toplam/gecerli/gecersiz/blacklist metrikleri",
-        "Toplu silme ve export",
+      description="Kendi rehberlerinizi canli API ile yonetin."
+      endpoint="/api/sms/phone-books"
+      columns={[
+        { key: "name", label: "Rehber" },
+        { key: "totalCount", label: "Toplam" },
+        { key: "validCount", label: "Gecerli" },
+        { key: "invalidCount", label: "Gecersiz" },
+        { key: "blacklistedCount", label: "Kara Liste" },
+        {
+          key: "updatedAt",
+          label: "Guncelleme",
+          render: (row) => new Date(String(row.updatedAt)).toLocaleString("tr-TR"),
+        },
       ]}
     />
   );

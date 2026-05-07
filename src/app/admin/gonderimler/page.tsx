@@ -1,17 +1,24 @@
-import { PagePlaceholder } from "@/components/page-placeholder";
+import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function AdminGonderimlerPage() {
   return (
-    <PagePlaceholder
+    <ResourceTablePage
       title="Tum SMS Gonderimler"
-      description="Tum musterilere ait kampanya gecmisini filtreleyin, rapor senkronu calistirin, kampanya detaylarini inceleyin."
-      items={[
-        "Global kampanya gecmisi",
-        "Arama/filtre/pagination",
-        "Kampanya detay gorunumu",
-        "Rapor senkron tetikleme",
-        "Kuyruktaki kampanyalari iptal",
-        "Export islemleri",
+      description="Kampanya kayitlarini canli API ile filtreleyin ve durumlarini izleyin."
+      endpoint="/api/admin/sms/campaigns"
+      columns={[
+        { key: "name", label: "Kampanya" },
+        { key: "user.email", label: "Musteri" },
+        { key: "provider.name", label: "Saglayici" },
+        { key: "status", label: "Durum" },
+        { key: "totalCount", label: "Toplam" },
+        { key: "deliveredCount", label: "Basarili" },
+        { key: "failedCount", label: "Basarisiz" },
+        {
+          key: "createdAt",
+          label: "Tarih",
+          render: (row) => new Date(String(row.createdAt)).toLocaleString("tr-TR"),
+        },
       ]}
     />
   );

@@ -1,16 +1,22 @@
-import { PagePlaceholder } from "@/components/page-placeholder";
+import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function SmsKrediHareketleriPage() {
   return (
-    <PagePlaceholder
+    <ResourceTablePage
       title="Kredi Hareketleri"
-      description="Kredi rezerv, dusum, iade ve duzeltme hareketlerini detayli olarak takip edin."
-      items={[
-        "Hareket turu bazli filtre",
-        "Kampanya iliskisi",
-        "Bakiye once/sonra",
-        "Zaman sirali log",
-        "Sayfalama ve export",
+      description="Kredi hareket kayitlariniz canli veriden listelenir."
+      endpoint="/api/sms/credit-transactions"
+      columns={[
+        { key: "type", label: "Tip" },
+        { key: "amount", label: "Tutar" },
+        { key: "balanceBefore", label: "Once" },
+        { key: "balanceAfter", label: "Sonra" },
+        { key: "reason", label: "Aciklama" },
+        {
+          key: "createdAt",
+          label: "Tarih",
+          render: (row) => new Date(String(row.createdAt)).toLocaleString("tr-TR"),
+        },
       ]}
     />
   );

@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/api-auth";
 import { ok } from "@/lib/http";
 import { providerCreateSchema } from "@/lib/schemas";
 import { parseJson } from "@/lib/validate";
+import { writeAuditLog } from "@/lib/audit";
 import { listProviders, upsertProvider } from "@/modules/sms/provider.service";
 
 export async function GET() {
@@ -19,6 +20,13 @@ export async function POST(req: Request) {
     ...parsed.data,
     token: parsed.data.token,
     tokenEncrypted: "",
+  });
+  await writeAuditLog({
+    userId: auth.user.id,
+    action: "PROVIDER_CREATE",
+    entityType: "SmsProvider",
+    entityId: provider.id,
+    metadata: { name: provider.name, slug: provider.slug },
   });
   return ok(provider);
 }

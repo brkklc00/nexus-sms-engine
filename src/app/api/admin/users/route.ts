@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/api-auth";
 import { ok, parsePagination } from "@/lib/http";
 import { parseJson } from "@/lib/validate";
 import { prisma } from "@/lib/prisma";
+import { writeAuditLog } from "@/lib/audit";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -50,6 +51,13 @@ export async function POST(req: Request) {
       name: parsed.data.name,
       role: parsed.data.role,
     },
+  });
+  await writeAuditLog({
+    userId: auth.user.id,
+    action: "USER_CREATE",
+    entityType: "User",
+    entityId: user.id,
+    metadata: { email: user.email, role: user.role },
   });
   return ok(user);
 }

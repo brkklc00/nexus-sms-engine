@@ -1,17 +1,23 @@
-import { PagePlaceholder } from "@/components/page-placeholder";
+import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function AdminBireyselGecmisPage() {
   return (
-    <PagePlaceholder
+    <ResourceTablePage
       title="Bireysel SMS Gecmisi"
-      description="Tum bireysel SMS kayitlarini kullanici/saglayici/durum/tarih filtreleriyle yonetin."
-      items={[
-        "Global bireysel SMS gecmisi",
-        "Kullanici ve saglayici filtreleri",
-        "Durum ve tarih filtreleri",
-        "Rapor senkron tetikleme",
-        "Sayfalama",
-        "Export",
+      description="Bireysel SMS kayitlarini canli veride filtreleyin."
+      endpoint="/api/admin/sms/individual-history"
+      columns={[
+        { key: "toPhone", label: "Alici" },
+        { key: "user.email", label: "Kullanici" },
+        { key: "provider.name", label: "Saglayici" },
+        { key: "costCredits", label: "Maliyet" },
+        { key: "status", label: "Durum" },
+        { key: "providerMessageId", label: "Provider ID" },
+        {
+          key: "createdAt",
+          label: "Tarih",
+          render: (row) => new Date(String(row.createdAt)).toLocaleString("tr-TR"),
+        },
       ]}
     />
   );

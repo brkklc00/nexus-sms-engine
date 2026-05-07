@@ -5,7 +5,10 @@ export function ok<T>(data: T, init?: ResponseInit) {
 }
 
 export function fail(message: string, status = 400, details?: unknown) {
-  return NextResponse.json({ ok: false, message, details }, { status });
+  return NextResponse.json(
+    { ok: false, error: { code: `HTTP_${status}`, message }, details },
+    { status },
+  );
 }
 
 export function parsePagination(url: URL) {

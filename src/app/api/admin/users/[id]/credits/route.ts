@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/api-auth";
 import { ok } from "@/lib/http";
 import { parseJson } from "@/lib/validate";
 import { applyCreditChange } from "@/modules/sms/credit.service";
+import { writeAuditLog } from "@/lib/audit";
 import { z } from "zod";
 
 const schema = z.object({
@@ -23,6 +24,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     amount: parsed.data.amount,
     reason: parsed.data.reason ?? "Admin kredi islemi",
     createdById: auth.user.id,
+  });
+  await writeAuditLog({
+    userId: auth.user.id,
+    action: "USER_CREDIT_CHANGE",
+    entityType: "User",
+    entityId: id,
+    metadata: { amount: parsed.data.amount, reason: parsed.data.reason },
   });
   return ok(result);
 }

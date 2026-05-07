@@ -1,32 +1,54 @@
-import {
-  Activity,
-  AlertTriangle,
-  BarChart3,
-  BookOpen,
-  CheckCircle2,
-  Clock3,
-  Coins,
-  MessageSquare,
-  Radio,
-  Send,
-} from "lucide-react";
+import { Activity, AlertTriangle, BookOpen, CheckCircle2, Clock3, Coins, MessageSquare, Send } from "lucide-react";
 import { ChartCard } from "@/components/chart-card";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
+import { requireSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await requireSession();
+  const userId = session.user.id;
+  const [today, monthStart] = [new Date(), new Date()];
+  today.setHours(0, 0, 0, 0);
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const [credit, totalSms, todaySms, success, failed, pending, activeCampaigns, phoneBooks, totalNumbers, campaigns, recentMessages] =
+    await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { smsCreditBalance: true } }),
+      prisma.smsMessage.count({ where: { userId } }),
+      prisma.smsMessage.count({ where: { userId, createdAt: { gte: today } } }),
+      prisma.smsMessage.count({ where: { userId, status: "delivered" } }),
+      prisma.smsMessage.count({ where: { userId, status: "failed" } }),
+      prisma.smsMessage.count({ where: { userId, status: { in: ["queued", "waiting"] } } }),
+      prisma.smsCampaign.count({ where: { userId, status: "running" } }),
+      prisma.smsPhoneBook.count({ where: { userId } }),
+      prisma.smsContact.count({ where: { phoneBook: { userId }, isValid: true } }),
+      prisma.smsCampaign.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: { name: true, status: true, totalCount: true, deliveredCount: true },
+      }),
+      prisma.smsMessage.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: { createdAt: true, status: true, phoneE164: true, error: true },
+      }),
+    ]);
+
   const stats = [
-    { title: "Toplam SMS", value: "128.430", icon: MessageSquare, hint: "Bu ay tum kanallar" },
-    { title: "Bugun Gonderilen", value: "2.148", icon: Send, hint: "Dun'e gore +12%" },
-    { title: "Basarili", value: "%96.4", icon: CheckCircle2, hint: "Teslimat orani" },
-    { title: "Basarisiz", value: "78", icon: AlertTriangle, hint: "Son 24 saat" },
-    { title: "Bekleyen", value: "234", icon: Clock3, hint: "Kuyruktaki mesajlar" },
-    { title: "Aktif Kampanya", value: "6", icon: Activity, hint: "Calisan kampanyalar" },
-    { title: "Toplam Rehber", value: "42", icon: BookOpen, hint: "Musteri bazli" },
-    { title: "Toplam Numara", value: "74.920", icon: BarChart3, hint: "Dogrulanmis kayitlar" },
-    { title: "Kredi Bakiyesi", value: "18.540", icon: Coins, hint: "Tahmini 12.1K SMS" },
-    { title: "Saglayici Durumu", value: "Canli", icon: Radio, hint: "Uipapp ana hatti aktif" },
+    { title: "Toplam SMS", value: String(totalSms), icon: MessageSquare, hint: "Tum zamanlar" },
+    { title: "Bugun Gonderilen", value: String(todaySms), icon: Send, hint: "Gunluk gonderim" },
+    { title: "Basarili", value: String(success), icon: CheckCircle2, hint: "Teslim edilen SMS" },
+    { title: "Basarisiz", value: String(failed), icon: AlertTriangle, hint: "Hata alan SMS" },
+    { title: "Bekleyen", value: String(pending), icon: Clock3, hint: "Kuyruktaki SMS" },
+    { title: "Aktif Kampanya", value: String(activeCampaigns), icon: Activity, hint: "Durum: running" },
+    { title: "Toplam Rehber", value: String(phoneBooks), icon: BookOpen, hint: "Kendi rehberleriniz" },
+    { title: "Toplam Numara", value: String(totalNumbers), icon: MessageSquare, hint: "Gecerli numaralar" },
+    { title: "Kredi Bakiyesi", value: String(credit?.smsCreditBalance ?? 0), icon: Coins, hint: "Anlik bakiye" },
   ];
 
   return (
@@ -44,51 +66,31 @@ export default function DashboardPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
-        <ChartCard title="Son 7 Gun Gonderim Trendi" subtitle="Gunluk toplam gonderim">
-          <div className="grid grid-cols-7 gap-2">
-            {[42, 55, 48, 61, 74, 68, 79].map((value, idx) => (
-              <div key={idx} className="flex flex-col items-center gap-2">
-                <div
-                  className="w-full rounded-md bg-indigo-500/70"
-                  style={{ height: `${Math.max(20, value)}px` }}
-                />
-                <span className="text-[10px] text-slate-400">G{idx + 1}</span>
-              </div>
-            ))}
-          </div>
-        </ChartCard>
-
-        <ChartCard title="Basarisizlik Dagilimi" subtitle="Son 24 saat">
-          <div className="space-y-2">
-            {[
-              ["Gecersiz numara", "41%"],
-              ["Saglayici timeout", "29%"],
-              ["Blacklist", "18%"],
-              ["Diger", "12%"],
-            ].map(([label, pct]) => (
-              <div key={label} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-3 py-2 text-sm">
-                <span className="text-slate-300">{label}</span>
-                <span className="font-medium text-slate-100">{pct}</span>
-              </div>
-            ))}
-          </div>
+        <ChartCard title="Aylik Ozet" subtitle="Bu ay icin guncel degerler">
+          <DataTable
+            columns={["Metri k", "Deger"]}
+            rows={[
+              ["Bu ay gonderilen", String(await prisma.smsMessage.count({ where: { userId, createdAt: { gte: monthStart } } }))],
+              ["Basarili", String(success)],
+              ["Basarisiz", String(failed)],
+              ["Bekleyen", String(pending)],
+            ]}
+          />
         </ChartCard>
 
         <ChartCard title="Kuyruk Ozeti" subtitle="Canli kuyruk bilgisi">
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center justify-between rounded-lg bg-slate-800/60 px-3 py-2">
-              <span className="text-slate-300">sms-send</span>
-              <span className="text-slate-100">234 bekliyor</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg bg-slate-800/60 px-3 py-2">
-              <span className="text-slate-300">sms-report-sync</span>
-              <span className="text-slate-100">16 senkronize ediliyor</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg bg-slate-800/60 px-3 py-2">
-              <span className="text-slate-300">Ortalama islem suresi</span>
-              <span className="text-slate-100">1.8 sn</span>
-            </div>
-          </div>
+          <DataTable columns={["Durum", "Adet"]} rows={[["Bekleyen", String(pending)], ["Aktif kampanya", String(activeCampaigns)]]} />
+        </ChartCard>
+
+        <ChartCard title="Son Bireysel Mesajlar" subtitle="En yeni 5 kayit">
+          <DataTable
+            columns={["Tarih", "Telefon", "Durum"]}
+            rows={recentMessages.map((item) => [
+              new Date(item.createdAt).toLocaleString("tr-TR"),
+              item.phoneE164,
+              item.status,
+            ])}
+          />
         </ChartCard>
       </section>
 
@@ -96,22 +98,18 @@ export default function DashboardPage() {
         <ChartCard title="Son Kampanyalar" subtitle="En guncel kampanya listesi">
           <DataTable
             columns={["Kampanya", "Durum", "Gonderim", "Basari"]}
-            rows={[
-              ["Indirim_Bulteni_1", "Calisiyor", "12.000", "%97"],
-              ["Hatirlatma_2026_05", "Tamamlandi", "4.200", "%95"],
-              ["Kargo_Bilgi", "Beklemede", "1.400", "-"],
-            ]}
+            rows={campaigns.map((item) => [item.name, item.status, String(item.totalCount), String(item.deliveredCount)])}
           />
         </ChartCard>
 
         <ChartCard title="Son Aktiviteler" subtitle="Sistem olay kayitlari">
           <DataTable
             columns={["Zaman", "Olay", "Detay"]}
-            rows={[
-              ["16:40", "Rapor senkron", "Kampanya #CMP-1021"],
-              ["16:28", "Toplu gonderim", "2.000 alici kuyruga alindi"],
-              ["16:10", "Kredi hareketi", "250 kredi dusumu"],
-            ]}
+            rows={recentMessages.map((item) => [
+              new Date(item.createdAt).toLocaleString("tr-TR"),
+              item.status,
+              item.error ?? item.phoneE164,
+            ])}
           />
         </ChartCard>
       </section>

@@ -1,16 +1,22 @@
-import { PagePlaceholder } from "@/components/page-placeholder";
+import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function SmsGecmisPage() {
   return (
-    <PagePlaceholder
+    <ResourceTablePage
       title="SMS Gecmisi"
-      description="Toplu ve bireysel SMS hareketlerini zaman filtresiyle inceleyin."
-      items={[
-        "Bireysel ve toplu gecmis",
-        "Durum filtresi",
-        "Saglayici filtresi",
-        "Tarih araligi secimi",
-        "CSV export",
+      description="Bireysel gonderim gecmisinizi canli API ile takip edin."
+      endpoint="/api/sms/history/individual"
+      columns={[
+        { key: "toPhone", label: "Alici" },
+        { key: "status", label: "Durum" },
+        { key: "provider.name", label: "Saglayici" },
+        { key: "costCredits", label: "Maliyet" },
+        { key: "errorMessage", label: "Hata" },
+        {
+          key: "createdAt",
+          label: "Tarih",
+          render: (row) => new Date(String(row.createdAt)).toLocaleString("tr-TR"),
+        },
       ]}
     />
   );

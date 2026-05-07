@@ -1,17 +1,19 @@
-import { PagePlaceholder } from "@/components/page-placeholder";
+import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function AdminSaglayicilarPage() {
   return (
-    <PagePlaceholder
+    <ResourceTablePage
       title="Saglayici Ayarlari"
-      description="SMS saglayicilarini yonetin, tokeni sifreli saklayin, bakiye/fiyat testleri yapin ve oncelik-limit kurallarini belirleyin."
-      items={[
-        "Saglayici ekle/duzenle",
-        "Sifreli token saklama",
-        "Aktif/Pasif ve oncelik",
-        "Bakiye ve fiyat cekme testleri",
-        "Saatlik/gunluk limitler",
-        "Timeout ve retry ayarlari",
+      description="Saglayici konfigurasyonlari canli API ile listelenir."
+      endpoint="/api/admin/sms/providers"
+      columns={[
+        { key: "name", label: "Saglayici" },
+        { key: "type", label: "Tip" },
+        { key: "baseUrl", label: "Base URL" },
+        { key: "isActive", label: "Durum", render: (row) => (row.isActive ? "Aktif" : "Pasif") },
+        { key: "priority", label: "Oncelik" },
+        { key: "hourlyLimit", label: "Saatlik Limit" },
+        { key: "dailyLimit", label: "Gunluk Limit" },
       ]}
     />
   );
