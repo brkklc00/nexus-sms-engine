@@ -14,7 +14,7 @@ const credentialsSchema = z.object({
 export const authOptions: NextAuthOptions = {
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   pages: { signIn: "/login", error: "/login" },
   providers: [
     CredentialsProvider({
@@ -47,10 +47,21 @@ export const authOptions: NextAuthOptions = {
       if (new URL(url).origin === baseUrl) return url;
       return baseUrl;
     },
-    async session({ session, user }) {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = (user.role as UserRole | undefined) ?? UserRole.customer;
+        token.email = user.email;
+        token.name = user.name;
+      }
+      return token;
+    },
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = user.id;
-        session.user.role = (user.role as UserRole | undefined) ?? UserRole.customer;
+        session.user.id = token.id as string;
+        session.user.role = ((token.role as UserRole | undefined) ?? UserRole.customer) as UserRole;
+        session.user.email = (token.email as string | undefined) ?? session.user.email;
+        session.user.name = (token.name as string | undefined) ?? session.user.name;
       }
       return session;
     },
