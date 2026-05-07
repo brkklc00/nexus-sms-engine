@@ -8,8 +8,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Nexus SMS Engine",
-  description: "Nexus SMS Engine - Uretim kalitesinde SMS yonetim platformu",
+  title: "NEXUS SMS Engine",
+  description: "NEXUS SMS gönderim, rehber, kredi ve kampanya yönetim platformu",
+  icons: {
+    icon: "https://i.ibb.co/nN2TdWjf/default-avatar.png",
+    shortcut: "https://i.ibb.co/nN2TdWjf/default-avatar.png",
+    apple: "https://i.ibb.co/nN2TdWjf/default-avatar.png",
+  },
 };
 
 export default function RootLayout({

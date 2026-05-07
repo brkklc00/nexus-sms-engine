@@ -28,4 +28,4 @@ reportWorker.on("failed", (job, error) => {
   logger.error({ jobId: job?.id, error: error.message }, "sms-report-sync hatasi");
 });
 
-console.log("Nexus SMS Worker calisiyor.");
+console.log("NEXUS SMS Worker calisiyor.");

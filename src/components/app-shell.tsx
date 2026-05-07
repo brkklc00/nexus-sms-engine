@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { ComponentType } from "react";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import {
   BarChart3,
   BookOpen,
@@ -63,9 +64,20 @@ export function AppShell({
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(79,70,229,0.16),_transparent_35%),#020617] text-slate-100">
       <div className="mx-auto max-w-[1400px] px-4 py-5 md:px-6">
         <header className="mb-5 flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 backdrop-blur">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-indigo-300">Nexus SMS Engine</p>
-            <h2 className="text-sm font-medium text-slate-100">Operasyon Merkezi</h2>
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg border border-white/10 bg-slate-950 p-1.5">
+              <Image
+                src="https://i.ibb.co/gLk7x7JD/nexus-logo-1.png"
+                alt="NEXUS"
+                width={84}
+                height={26}
+                className="h-6 w-auto object-contain"
+              />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-indigo-300">NEXUS</p>
+              <h2 className="text-sm font-medium text-slate-100">SMS Operasyon Merkezi</h2>
+            </div>
           </div>
           <button
             onClick={() => setMobileOpen((v) => !v)}
@@ -83,6 +95,17 @@ export function AppShell({
               mobileOpen ? "block" : "hidden",
             )}
           >
+          <div className="mb-3 flex items-center justify-center md:mb-4">
+            <div className="rounded-xl border border-white/10 bg-slate-950 p-2">
+              <Image
+                src="https://i.ibb.co/gLk7x7JD/nexus-logo-1.png"
+                alt="NEXUS logo"
+                width={110}
+                height={34}
+                className="h-7 w-auto object-contain md:h-6"
+              />
+            </div>
+          </div>
           <nav className="space-y-2">
             {items.map((item) => (
               <Link

@@ -43,7 +43,7 @@ export function LoginForm({ initialError }: { initialError?: string }) {
   }
 
   return (
-    <AuthCard title="Nexus SMS Engine Girisi" description="Yonetim paneline guvenli erisim">
+    <AuthCard title="NEXUS SMS Engine Girisi" description="Yonetim paneline guvenli erisim">
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
           <label className="text-xs font-medium text-slate-300">E-posta</label>
