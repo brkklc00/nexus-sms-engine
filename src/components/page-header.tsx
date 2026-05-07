@@ -8,7 +8,7 @@ export function PageHeader({
   badge?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-950 p-6">
+    <div className="nexus-surface rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950 p-6">
       {badge ? (
         <span className="inline-flex rounded-full border border-indigo-400/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-200">
           {badge}

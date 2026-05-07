@@ -61,9 +61,9 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(79,70,229,0.16),_transparent_35%),#020617] text-slate-100">
+    <div className="nexus-bg min-h-screen text-slate-100">
       <div className="mx-auto max-w-[1400px] px-4 py-5 md:px-6">
-        <header className="mb-5 flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 backdrop-blur">
+        <header className="nexus-surface mb-5 flex items-center justify-between rounded-2xl px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="rounded-lg border border-white/10 bg-slate-950 p-1.5">
               <Image
@@ -91,7 +91,7 @@ export function AppShell({
         <div className="grid grid-cols-1 gap-5 md:grid-cols-[88px_1fr]">
           <aside
             className={cn(
-              "rounded-2xl border border-white/10 bg-slate-900/80 p-3 backdrop-blur md:block",
+              "nexus-surface rounded-2xl p-3 md:block",
               mobileOpen ? "block" : "hidden",
             )}
           >
@@ -126,7 +126,7 @@ export function AppShell({
             ))}
           </nav>
           </aside>
-          <main className="space-y-5 rounded-2xl border border-white/10 bg-slate-900/70 p-4 backdrop-blur md:p-6">
+          <main className="nexus-surface space-y-5 rounded-2xl p-4 md:p-6">
             {children}
           </main>
         </div>

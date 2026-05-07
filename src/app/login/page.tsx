@@ -19,7 +19,7 @@ export default async function LoginPage({
 
   const params = await searchParams;
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_right,_rgba(99,102,241,0.25),_transparent_35%),#020617] p-4 text-slate-100">
+    <div className="nexus-bg flex min-h-screen items-center justify-center p-4 text-slate-100">
       <LoginForm initialError={params.error} />
     </div>
   );

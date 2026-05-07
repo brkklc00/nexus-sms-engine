@@ -5,9 +5,9 @@ type DataTableProps = {
 
 export function DataTable({ columns, rows }: DataTableProps) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10">
+    <div className="nexus-surface-strong overflow-hidden rounded-2xl">
       <table className="min-w-full divide-y divide-white/10 text-sm">
-        <thead className="bg-slate-900">
+        <thead className="bg-slate-900/90">
           <tr>
             {columns.map((column) => (
               <th key={column} className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-400">

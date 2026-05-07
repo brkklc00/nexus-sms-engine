@@ -12,7 +12,7 @@ export function StatCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-4 backdrop-blur">
+    <div className="nexus-surface rounded-2xl p-4">
       <div className="flex items-start justify-between">
         <p className="text-xs uppercase tracking-wide text-slate-400">{title}</p>
         <div className="rounded-lg border border-white/10 bg-slate-800 p-2">
