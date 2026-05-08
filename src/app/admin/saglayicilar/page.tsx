@@ -17,6 +17,16 @@ export default function AdminSaglayicilarPage() {
         { key: "hourlyLimit", label: "Saatlik Limit" },
         { key: "dailyLimit", label: "Günlük Limit" },
       ]}
+      actions={[
+        {
+          label: "Bakiye Test Et",
+          href: (row) => `/api/admin/sms/providers/${row.id as string}/test-balance`,
+        },
+        {
+          label: "Fiyat Test Et",
+          href: (row) => `/api/admin/sms/providers/${row.id as string}/fetch-prices`,
+        },
+      ]}
     />
   );
 }

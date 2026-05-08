@@ -43,3 +43,21 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   });
   return ok(provider);
 }
+
+export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
+  return PATCH(req, context);
+}
+
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireAdmin();
+  if ("error" in auth) return auth.error;
+  const { id } = await params;
+  await prisma.smsProvider.deleteMany({ where: { id } });
+  await writeAuditLog({
+    userId: auth.user.id,
+    action: "PROVIDER_DELETE",
+    entityType: "SmsProvider",
+    entityId: id,
+  });
+  return ok({ deleted: true });
+}

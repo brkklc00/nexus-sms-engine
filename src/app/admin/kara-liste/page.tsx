@@ -19,6 +19,14 @@ export default function AdminKaraListePage() {
           render: (row) => new Date(String(row.createdAt)).toLocaleString("tr-TR"),
         },
       ]}
+      actions={[
+        {
+          label: "Sil",
+          method: "DELETE",
+          href: (row) => `/api/admin/blacklist/${row.id as string}`,
+          confirmText: "Bu numarayı kara listeden kaldırmak istediğinize emin misiniz?",
+        },
+      ]}
     />
   );
 }

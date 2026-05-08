@@ -1,1 +1,1 @@
-export { PATCH } from "@/app/api/admin/sms/providers/[id]/route";
+export { PATCH, PUT, DELETE } from "@/app/api/admin/sms/providers/[id]/route";
