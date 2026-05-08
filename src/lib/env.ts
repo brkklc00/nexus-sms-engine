@@ -22,6 +22,9 @@ const envSchema = z.object({
   DEFAULT_SMS_PROVIDER_TOKEN: z.string().optional(),
   WORKER_CONCURRENCY: z.coerce.number().int().positive().default(5),
   SMS_SEND_CHUNK_SIZE: z.coerce.number().int().positive().default(100),
+  SMS_SEND_RETRY_LIMIT: z.coerce.number().int().positive().default(6),
+  RATE_LIMIT_WAIT_TIMEOUT_MS: z.coerce.number().int().positive().default(60000),
+  RATE_LIMIT_REQUEUE_DELAY_MS: z.coerce.number().int().positive().default(5000),
   SMS_REPORT_SYNC_INTERVAL_SECONDS: z.coerce.number().int().positive().default(300),
   ENABLE_SEED: z
     .string()

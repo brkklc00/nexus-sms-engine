@@ -29,6 +29,7 @@ export const phoneBookCreateSchema = z.object({
 export const providerCreateSchema = z.object({
   name: z.string().min(2),
   slug: z.string().min(2),
+  type: z.string().min(2).default("smtp"),
   baseUrl: z.string().url(),
   token: z.string().min(3),
   isActive: z.boolean().default(true),
@@ -36,4 +37,13 @@ export const providerCreateSchema = z.object({
   timeoutSeconds: z.number().int().default(15),
   dailyLimit: z.number().int().nullable().optional(),
   hourlyLimit: z.number().int().nullable().optional(),
+  targetRatePerSecond: z.number().positive().default(0.5),
+  maxRatePerSecond: z.number().positive().default(1),
+  warmupEnabled: z.boolean().default(true),
+  warmupStartRps: z.number().positive().default(0.2),
+  warmupIncrementStep: z.number().positive().default(0.2),
+  warmupMaxRps: z.number().positive().default(2),
+  dailyCap: z.number().int().positive().nullable().optional(),
+  hourlyCap: z.number().int().positive().nullable().optional(),
+  minuteCap: z.number().int().positive().nullable().optional(),
 });

@@ -1,4 +1,5 @@
 import { Queue } from "bullmq";
+import { env } from "@/lib/env";
 import { redis } from "@/lib/redis";
 
 export type SmsSendJob = {
@@ -17,8 +18,8 @@ export type SmsReportSyncJob = {
 export const smsSendQueue = new Queue<SmsSendJob, unknown, string>("sms-send", {
   connection: redis,
   defaultJobOptions: {
-    attempts: 4,
-    backoff: { type: "exponential", delay: 2000 },
+    attempts: env.SMS_SEND_RETRY_LIMIT,
+    backoff: { type: "fixed", delay: env.RATE_LIMIT_REQUEUE_DELAY_MS },
     removeOnComplete: 1000,
     removeOnFail: 5000,
   },

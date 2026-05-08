@@ -87,18 +87,34 @@ model User {
 }
 
 model SmsProvider {
-  id             String   @id @default(cuid())
-  name           String
-  slug           String   @unique
-  baseUrl        String
-  tokenEncrypted String
-  isActive       Boolean  @default(true)
-  priority       Int      @default(100)
-  timeoutSeconds Int      @default(15)
-  dailyLimit     Int?
-  hourlyLimit    Int?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  name                String
+  slug                String   @unique
+  type                String   @default("smtp")
+  baseUrl             String
+  tokenEncrypted      String
+  isActive            Boolean  @default(true)
+  priority            Int      @default(100)
+  timeoutSeconds      Int      @default(15)
+  dailyLimit          Int?
+  hourlyLimit         Int?
+  targetRatePerSecond Float    @default(0.5)
+  maxRatePerSecond    Float    @default(1)
+  warmupEnabled       Boolean  @default(true)
+  warmupStartRps      Float    @default(0.2)
+  warmupIncrementStep Float    @default(0.2)
+  warmupMaxRps        Float    @default(2)
+  dailyCap            Int?
+  hourlyCap           Int?
+  minuteCap           Int?
+  isThrottled         Boolean  @default(false)
+  throttleReason      String?
+  cooldownUntil       DateTime?
+  lastError           String?
+  healthStatus        String   @default("healthy")
+  deletedAt           DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   usersWithDefault User[]                 @relation("UserDefaultProvider")
   campaigns        SmsCampaign[]
