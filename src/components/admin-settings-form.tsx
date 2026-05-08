@@ -12,13 +12,13 @@ type SettingItem = {
 };
 
 const defaults: SettingItem[] = [
-  { key: "default_chunk_size", value: 500, type: "number", description: "Varsayilan SMS chunk boyutu" },
-  { key: "report_sync_interval_min", value: 15, type: "number", description: "Rapor senkron araligi (dk)" },
-  { key: "default_rate_limit", value: 60, type: "number", description: "Dakikalik varsayilan rate limit" },
+  { key: "default_chunk_size", value: 500, type: "number", description: "Varsayılan SMS chunk boyutu" },
+  { key: "report_sync_interval_min", value: 15, type: "number", description: "Rapor senkron aralığı (dk)" },
+  { key: "default_rate_limit", value: 60, type: "number", description: "Dakikalık varsayılan rate limit" },
   { key: "notifications_enabled", value: true, type: "boolean", description: "Sistem bildirimleri" },
   { key: "audit_policy", value: "strict", type: "string", description: "Audit policy seviyesi" },
-  { key: "default_markup_percent", value: 10, type: "number", description: "Varsayilan markup yuzdesi" },
-  { key: "global_blacklist_enabled", value: true, type: "boolean", description: "Global blacklist kontrolu" },
+  { key: "default_markup_percent", value: 10, type: "number", description: "Varsayılan markup yüzdesi" },
+  { key: "global_blacklist_enabled", value: true, type: "boolean", description: "Global blacklist kontrolü" },
 ];
 
 export function AdminSettingsForm() {
@@ -27,16 +27,22 @@ export function AdminSettingsForm() {
   const [feedback, setFeedback] = useState<string | null>(null);
 
   async function load() {
-    setLoading(true);
-    const response = await fetch("/api/admin/settings", { cache: "no-store" });
-    const json = (await response.json().catch(() => null)) as { ok?: boolean; data?: SettingItem[] } | null;
-    if (!response.ok || !json?.ok) {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/admin/settings", { cache: "no-store" });
+      const json = (await response.json().catch(() => null)) as { ok?: boolean; data?: SettingItem[] } | null;
+      if (!response.ok || !json?.ok) {
+        setItems([]);
+        setLoading(false);
+        return;
+      }
+      setItems(json.data ?? []);
+    } catch (error) {
+      console.error("[admin-settings-form] load error", error);
       setItems([]);
+    } finally {
       setLoading(false);
-      return;
     }
-    setItems(json.data ?? []);
-    setLoading(false);
   }
 
   useEffect(() => {
@@ -45,24 +51,29 @@ export function AdminSettingsForm() {
   }, []);
 
   async function save() {
-    const response = await fetch("/api/admin/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ settings: items }),
-    });
-    if (!response.ok) {
-      setFeedback("Kayit basarisiz oldu.");
-      return;
+    try {
+      const response = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: items }),
+      });
+      if (!response.ok) {
+        setFeedback("Kayıt başarısız oldu.");
+        return;
+      }
+      setFeedback("Ayarlar kaydedildi.");
+      await load();
+    } catch (error) {
+      console.error("[admin-settings-form] save error", error);
+      setFeedback("Kayıt başarısız oldu.");
     }
-    setFeedback("Ayarlar kaydedildi.");
-    await load();
   }
 
   const merged = defaults.map((item) => items.find((x) => x.key === item.key) ?? item);
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Ayarlar" description="Sistem ayarlarini canli API baglantisiyla yonetin." badge="SystemSetting" />
+      <PageHeader title="Ayarlar" description="Sistem ayarlarını canlı API bağlantısıyla yönetin." badge="SystemSetting" />
       <section className="nexus-surface rounded-2xl p-5">
         {feedback ? <p className="mb-4 rounded-lg border border-indigo-400/30 bg-indigo-500/10 px-3 py-2 text-sm text-indigo-200">{feedback}</p> : null}
         {loading ? (
@@ -72,7 +83,7 @@ export function AdminSettingsForm() {
             ))}
           </div>
         ) : merged.length === 0 ? (
-          <EmptyState title="Henuz ayar yok" description="Varsayilan ayarlari olusturup kaydedebilirsiniz." />
+          <EmptyState title="Henüz ayar yok" description="Varsayılan ayarları oluşturup kaydedebilirsiniz." />
         ) : (
           <div className="space-y-3">
             {merged.map((item) => (
@@ -107,11 +118,11 @@ export function AdminSettingsForm() {
           <button
             onClick={() => {
               setItems(defaults);
-              setFeedback("Varsayilanlar yuklendi. Kaydet'e basin.");
+              setFeedback("Varsayılanlar yüklendi. Kaydet'e basın.");
             }}
             className="rounded-lg border border-white/10 bg-slate-900 px-4 py-2 text-sm text-slate-200"
           >
-            Varsayilanlara Don
+            Varsayılanlara Dön
           </button>
         </div>
       </section>

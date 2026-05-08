@@ -1,18 +1,20 @@
+"use client";
+
 import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function AdminOtpGecmisiPage() {
   return (
     <ResourceTablePage
-      title="SMS OTP Gecmisi"
-      description="OTP kayitlarini canli API verisiyle takip edin."
+      title="SMS OTP Geçmişi"
+      description="OTP kayıtlarını canlı API verisiyle takip edin."
       endpoint="/api/admin/sms/otp-history"
       columns={[
-        { key: "user.email", label: "Kullanici" },
+        { key: "user.email", label: "Kullanıcı" },
         { key: "phoneE164", label: "Telefon" },
-        { key: "purpose", label: "Amac" },
+        { key: "purpose", label: "Amaç" },
         { key: "status", label: "Durum" },
-        { key: "provider.name", label: "Saglayici" },
-        { key: "costCredits", label: "Maliyet" },
+        { key: "provider.name", label: "Sağlayıcı" },
+        { key: "cost", label: "Maliyet" },
         {
           key: "createdAt",
           label: "Tarih",

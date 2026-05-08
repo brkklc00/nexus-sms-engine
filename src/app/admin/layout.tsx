@@ -1,6 +1,6 @@
 import { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
-import { AppShell } from "@/components/app-shell";
+import { AdminShell } from "@/components/admin-shell";
 import { requireSession } from "@/lib/auth";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -9,5 +9,5 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/dashboard");
   }
 
-  return <AppShell role="admin">{children}</AppShell>;
+  return <AdminShell>{children}</AdminShell>;
 }

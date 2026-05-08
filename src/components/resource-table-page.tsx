@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ActionButton } from "@/components/action-button";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
+import { FilterBar } from "@/components/filter-bar";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 
 type Column<T = Record<string, unknown>> = {
@@ -27,7 +31,7 @@ function pick(row: Record<string, unknown>, key: string): string | number {
   if (typeof value === "number") return value;
   if (typeof value === "string") return value;
   if (value === null || value === undefined) return "-";
-  if (typeof value === "boolean") return value ? "Evet" : "Hayir";
+  if (typeof value === "boolean") return value ? "Evet" : "Hayır";
   return JSON.stringify(value);
 }
 
@@ -57,38 +61,43 @@ export function ResourceTablePage<T extends Record<string, unknown>>({
   const totalPages = useMemo(() => Math.max(1, Math.ceil(meta.total / meta.limit)), [meta]);
 
   async function loadData() {
-    setLoading(true);
-    setError(null);
-    const params = new URLSearchParams();
-    params.set("page", String(page));
-    params.set("limit", String(meta.limit));
-    if (q.trim()) params.set("q", q.trim());
+    try {
+      setLoading(true);
+      setError(null);
+      const params = new URLSearchParams();
+      params.set("page", String(page));
+      params.set("limit", String(meta.limit));
+      if (q.trim()) params.set("q", q.trim());
 
-    const response = await fetch(`${endpoint}?${params.toString()}`, { cache: "no-store" });
-    const json = (await response.json().catch(() => null)) as
-      | { ok: true; data: { items?: T[]; total?: number; page?: number; limit?: number } | T[] }
-      | { ok: false; message?: string }
-      | null;
+      const response = await fetch(`${endpoint}?${params.toString()}`, { cache: "no-store" });
+      const json = (await response.json().catch(() => null)) as
+        | { ok: true; data: { items?: T[]; total?: number; page?: number; limit?: number } | T[] }
+        | { ok: false; message?: string }
+        | null;
 
-    if (!response.ok || !json || !json.ok) {
-      setError("Veriler alinamadi.");
+      if (!response.ok || !json || !json.ok) {
+        setError("Veriler alınamadı.");
+        setLoading(false);
+        return;
+      }
+
+      if (Array.isArray(json.data)) {
+        setRows(json.data);
+        setMeta({ total: json.data.length, page: 1, limit: json.data.length || 20 });
+      } else {
+        setRows((json.data.items ?? []) as T[]);
+        setMeta({
+          total: json.data.total ?? 0,
+          page: json.data.page ?? 1,
+          limit: json.data.limit ?? 20,
+        });
+      }
+    } catch (requestError) {
+      console.error("[resource-table-page] loadData error", endpoint, requestError);
+      setError("Bu sayfa yüklenirken bir hata oluştu.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (Array.isArray(json.data)) {
-      setRows(json.data);
-      setMeta({ total: json.data.length, page: 1, limit: json.data.length || 20 });
-    } else {
-      setRows((json.data.items ?? []) as T[]);
-      setMeta({
-        total: json.data.total ?? 0,
-        page: json.data.page ?? 1,
-        limit: json.data.limit ?? 20,
-      });
-    }
-
-    setLoading(false);
   }
 
   useEffect(() => {
@@ -99,26 +108,31 @@ export function ResourceTablePage<T extends Record<string, unknown>>({
 
   async function runAction(action: RowAction<T>, row: T) {
     if (action.confirmText && !window.confirm(action.confirmText)) return;
-    setFeedback(null);
-    const response = await fetch(action.href(row), {
-      method: action.method ?? "POST",
-      headers: { "Content-Type": "application/json" },
-    });
-    const json = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
-    if (!response.ok || json?.ok === false) {
-      setFeedback(json?.message ?? "Islem basarisiz.");
-      return;
+    try {
+      setFeedback(null);
+      const response = await fetch(action.href(row), {
+        method: action.method ?? "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const json = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+      if (!response.ok || json?.ok === false) {
+        setFeedback(json?.message ?? "İşlem başarısız.");
+        return;
+      }
+      setFeedback("İşlem başarıyla tamamlandı.");
+      await loadData();
+    } catch (actionError) {
+      console.error("[resource-table-page] runAction error", endpoint, actionError);
+      setFeedback("İşlem sırasında bir hata oluştu.");
     }
-    setFeedback("Islem basariyla tamamlandi.");
-    await loadData();
   }
 
   return (
     <div className="space-y-5">
-      <PageHeader title={title} description={description} badge={badge ?? "Canli Veri"} />
+      <PageHeader title={title} description={description} badge={badge ?? "Canlı Veri"} />
 
       <section className="nexus-surface rounded-2xl p-4">
-        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <FilterBar>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -126,39 +140,33 @@ export function ResourceTablePage<T extends Record<string, unknown>>({
             className="nexus-input max-w-sm py-2 pl-3"
           />
           <div className="flex items-center gap-2">
-            <button
+            <ActionButton
               onClick={() => {
                 setPage(1);
                 void loadData();
               }}
-              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-xs text-slate-200 hover:bg-slate-800"
             >
               Filtrele
-            </button>
-            <button
+            </ActionButton>
+            <ActionButton
               onClick={() => {
                 setQ("");
                 setPage(1);
                 void loadData();
               }}
-              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800"
             >
               Temizle
-            </button>
+            </ActionButton>
           </div>
-        </div>
+        </FilterBar>
 
         {feedback ? <p className="mb-3 rounded-lg border border-indigo-400/30 bg-indigo-500/10 px-3 py-2 text-sm text-indigo-200">{feedback}</p> : null}
-        {error ? <p className="mb-3 rounded-lg border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{error}</p> : null}
+        {error ? <ErrorState description={error} onRetry={() => void loadData()} /> : null}
 
         {loading ? (
-          <div className="grid gap-2">
-            {Array.from({ length: 6 }).map((_, idx) => (
-              <div key={idx} className="h-10 animate-pulse rounded-lg bg-slate-800/60" />
-            ))}
-          </div>
+          <LoadingState lines={6} />
         ) : rows.length === 0 ? (
-          <EmptyState title="Henuz kayit yok" description="Yeni kayit olusturdugunuzda bu liste otomatik guncellenir." />
+          <EmptyState title="Henüz kayıt yok" description="Yeni kayıt oluşturduğunuzda bu liste otomatik güncellenir." />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-white/10">
             <table className="min-w-full text-sm">
@@ -184,13 +192,12 @@ export function ResourceTablePage<T extends Record<string, unknown>>({
                       <td className="px-3 py-2">
                         <div className="flex flex-wrap gap-2">
                           {actions.map((action) => (
-                            <button
+                            <ActionButton
                               key={action.label}
                               onClick={() => void runAction(action, row)}
-                              className="rounded-md border border-white/10 bg-slate-900 px-2.5 py-1 text-xs text-slate-200 hover:bg-slate-800"
                             >
                               {action.label}
-                            </button>
+                            </ActionButton>
                           ))}
                         </div>
                       </td>
@@ -204,23 +211,21 @@ export function ResourceTablePage<T extends Record<string, unknown>>({
 
         <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
           <span>
-            Toplam: {meta.total} kayit - Sayfa {meta.page}/{totalPages}
+            Toplam: {meta.total} kayıt - Sayfa {meta.page}/{totalPages}
           </span>
           <div className="flex gap-2">
-            <button
+            <ActionButton
               disabled={meta.page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="rounded-md border border-white/10 bg-slate-900 px-3 py-1 disabled:opacity-50"
             >
-              Onceki
-            </button>
-            <button
+              Önceki
+            </ActionButton>
+            <ActionButton
               disabled={meta.page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="rounded-md border border-white/10 bg-slate-900 px-3 py-1 disabled:opacity-50"
             >
               Sonraki
-            </button>
+            </ActionButton>
           </div>
         </div>
       </section>

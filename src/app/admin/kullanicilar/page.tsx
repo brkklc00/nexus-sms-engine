@@ -1,10 +1,12 @@
+"use client";
+
 import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function AdminKullanicilarPage() {
   return (
     <ResourceTablePage
-      title="Kullanici Yonetimi"
-      description="Kullanici listesi, roller ve kredi ozetleri canli API'dan gelir."
+      title="Kullanıcı Yönetimi"
+      description="Kullanıcı listesi, roller ve kredi özetleri canlı API'dan gelir."
       endpoint="/api/admin/users"
       columns={[
         { key: "name", label: "Ad" },
@@ -15,7 +17,7 @@ export default function AdminKullanicilarPage() {
         { key: "smsMarkupPercent", label: "Markup %" },
         {
           key: "createdAt",
-          label: "Olusturma",
+          label: "Oluşturma",
           render: (row) => new Date(String(row.createdAt)).toLocaleString("tr-TR"),
         },
       ]}

@@ -1,6 +1,7 @@
 import { Activity, AlertTriangle, BookOpen, CheckCircle2, Clock3, Coins, MessageSquare, Send } from "lucide-react";
 import { ChartCard } from "@/components/chart-card";
 import { DataTable } from "@/components/data-table";
+import { ErrorState } from "@/components/error-state";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { requireSession } from "@/lib/auth";
@@ -14,49 +15,53 @@ export default async function DashboardPage() {
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
 
-  const [credit, totalSms, todaySms, success, failed, pending, activeCampaigns, phoneBooks, totalNumbers, campaigns, recentMessages] =
-    await Promise.all([
-      prisma.user.findUnique({ where: { id: userId }, select: { smsCreditBalance: true } }),
-      prisma.smsMessage.count({ where: { userId } }),
-      prisma.smsMessage.count({ where: { userId, createdAt: { gte: today } } }),
-      prisma.smsMessage.count({ where: { userId, status: "delivered" } }),
-      prisma.smsMessage.count({ where: { userId, status: "failed" } }),
-      prisma.smsMessage.count({ where: { userId, status: { in: ["queued", "waiting"] } } }),
-      prisma.smsCampaign.count({ where: { userId, status: "running" } }),
-      prisma.smsPhoneBook.count({ where: { userId } }),
-      prisma.smsContact.count({ where: { phoneBook: { userId }, isValid: true } }),
-      prisma.smsCampaign.findMany({
-        where: { userId },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        select: { name: true, status: true, totalCount: true, deliveredCount: true },
-      }),
-      prisma.smsMessage.findMany({
-        where: { userId },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        select: { createdAt: true, status: true, phoneE164: true, error: true },
-      }),
-    ]);
+  const data = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { smsCreditBalance: true } }),
+    prisma.smsMessage.count({ where: { userId } }),
+    prisma.smsMessage.count({ where: { userId, createdAt: { gte: today } } }),
+    prisma.smsMessage.count({ where: { userId, status: "delivered" } }),
+    prisma.smsMessage.count({ where: { userId, status: "failed" } }),
+    prisma.smsMessage.count({ where: { userId, status: { in: ["queued", "waiting"] } } }),
+    prisma.smsCampaign.count({ where: { userId, status: "running" } }),
+    prisma.smsPhoneBook.count({ where: { userId } }),
+    prisma.smsContact.count({ where: { phoneBook: { userId }, isValid: true } }),
+    prisma.smsCampaign.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { name: true, status: true, totalCount: true, deliveredCount: true },
+    }),
+    prisma.smsMessage.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { createdAt: true, status: true, phoneE164: true, error: true },
+    }),
+  ]).catch((error) => {
+    console.error("[dashboard] query error", error);
+    return null;
+  });
 
+  if (!data) return <ErrorState />;
+  const [credit, totalSms, todaySms, success, failed, pending, activeCampaigns, phoneBooks, totalNumbers, campaigns, recentMessages] = data;
   const stats = [
-    { title: "Toplam SMS", value: String(totalSms), icon: MessageSquare, hint: "Tum zamanlar" },
-    { title: "Bugun Gonderilen", value: String(todaySms), icon: Send, hint: "Gunluk gonderim" },
-    { title: "Basarili", value: String(success), icon: CheckCircle2, hint: "Teslim edilen SMS" },
-    { title: "Basarisiz", value: String(failed), icon: AlertTriangle, hint: "Hata alan SMS" },
+    { title: "Toplam SMS", value: String(totalSms), icon: MessageSquare, hint: "Tüm zamanlar" },
+    { title: "Bugün Gönderilen", value: String(todaySms), icon: Send, hint: "Günlük gönderim" },
+    { title: "Başarılı", value: String(success), icon: CheckCircle2, hint: "Teslim edilen SMS" },
+    { title: "Başarısız", value: String(failed), icon: AlertTriangle, hint: "Hata alan SMS" },
     { title: "Bekleyen", value: String(pending), icon: Clock3, hint: "Kuyruktaki SMS" },
     { title: "Aktif Kampanya", value: String(activeCampaigns), icon: Activity, hint: "Durum: running" },
     { title: "Toplam Rehber", value: String(phoneBooks), icon: BookOpen, hint: "Kendi rehberleriniz" },
-    { title: "Toplam Numara", value: String(totalNumbers), icon: MessageSquare, hint: "Gecerli numaralar" },
-    { title: "Kredi Bakiyesi", value: String(credit?.smsCreditBalance ?? 0), icon: Coins, hint: "Anlik bakiye" },
+    { title: "Toplam Numara", value: String(totalNumbers), icon: MessageSquare, hint: "Geçerli numaralar" },
+    { title: "Kredi Bakiyesi", value: String(credit?.smsCreditBalance ?? 0), icon: Coins, hint: "Anlık bakiye" },
   ];
 
   return (
     <div className="space-y-5">
       <PageHeader
         title="SMS Operasyon Dashboard"
-        description="Gonderim performansi, kredi kullanimi, saglayici sagligi ve kuyruk metriklerini tek merkezden izleyin."
-        badge="Musteri Operasyon"
+        description="Gönderim performansı, kredi kullanımı, sağlayıcı sağlığı ve kuyruk metriklerini tek merkezden izleyin."
+        badge="Müşteri Operasyon"
       />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -66,23 +71,23 @@ export default async function DashboardPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
-        <ChartCard title="Aylik Ozet" subtitle="Bu ay icin guncel degerler">
+        <ChartCard title="Aylık Özet" subtitle="Bu ay için güncel değerler">
           <DataTable
-            columns={["Metri k", "Deger"]}
+            columns={["Metrik", "Değer"]}
             rows={[
-              ["Bu ay gonderilen", String(await prisma.smsMessage.count({ where: { userId, createdAt: { gte: monthStart } } }))],
-              ["Basarili", String(success)],
-              ["Basarisiz", String(failed)],
+              ["Bu ay gönderilen", String(await prisma.smsMessage.count({ where: { userId, createdAt: { gte: monthStart } } }))],
+              ["Başarılı", String(success)],
+              ["Başarısız", String(failed)],
               ["Bekleyen", String(pending)],
             ]}
           />
         </ChartCard>
 
-        <ChartCard title="Kuyruk Ozeti" subtitle="Canli kuyruk bilgisi">
+        <ChartCard title="Kuyruk Özeti" subtitle="Canlı kuyruk bilgisi">
           <DataTable columns={["Durum", "Adet"]} rows={[["Bekleyen", String(pending)], ["Aktif kampanya", String(activeCampaigns)]]} />
         </ChartCard>
 
-        <ChartCard title="Son Bireysel Mesajlar" subtitle="En yeni 5 kayit">
+        <ChartCard title="Son Bireysel Mesajlar" subtitle="En yeni 5 kayıt">
           <DataTable
             columns={["Tarih", "Telefon", "Durum"]}
             rows={recentMessages.map((item) => [
@@ -95,14 +100,14 @@ export default async function DashboardPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
-        <ChartCard title="Son Kampanyalar" subtitle="En guncel kampanya listesi">
+        <ChartCard title="Son Kampanyalar" subtitle="En güncel kampanya listesi">
           <DataTable
-            columns={["Kampanya", "Durum", "Gonderim", "Basari"]}
+            columns={["Kampanya", "Durum", "Gönderim", "Başarı"]}
             rows={campaigns.map((item) => [item.name, item.status, String(item.totalCount), String(item.deliveredCount)])}
           />
         </ChartCard>
 
-        <ChartCard title="Son Aktiviteler" subtitle="Sistem olay kayitlari">
+        <ChartCard title="Son Aktiviteler" subtitle="Sistem olay kayıtları">
           <DataTable
             columns={["Zaman", "Olay", "Detay"]}
             rows={recentMessages.map((item) => [

@@ -3,6 +3,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { UserRole } from "@prisma/client";
 import { getServerSession, NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
@@ -71,7 +72,7 @@ export const authOptions: NextAuthOptions = {
 export async function requireSession() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    throw new Error("Oturum gerekli.");
+    redirect("/login");
   }
   return session;
 }

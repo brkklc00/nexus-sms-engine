@@ -1,10 +1,12 @@
+"use client";
+
 import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function KaraListePage() {
   return (
     <ResourceTablePage
       title="SMS Kara Liste"
-      description="Kara liste kayitlarinizi canli API baglantisiyla goruntuleyin."
+      description="Kara liste kayıtlarınızı canlı API bağlantısıyla görüntüleyin."
       endpoint="/api/sms/blacklist"
       columns={[
         { key: "phoneE164", label: "Telefon" },
@@ -21,7 +23,7 @@ export default function KaraListePage() {
           label: "Sil",
           method: "DELETE",
           href: (row) => `/api/sms/blacklist/${row.id as string}`,
-          confirmText: "Bu numarayi kara listeden silmek istediginize emin misiniz?",
+          confirmText: "Bu numarayı kara listeden silmek istediğinize emin misiniz?",
         },
       ]}
     />

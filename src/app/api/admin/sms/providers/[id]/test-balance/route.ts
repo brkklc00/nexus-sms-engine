@@ -10,6 +10,6 @@ export async function POST(_: Request, { params }: { params: Promise<{ id: strin
     const balance = await providerBalance(id);
     return ok(balance);
   } catch (error) {
-    return fail(error instanceof Error ? error.message : "Saglayici bakiyesi alinamadi.", 500);
+    return fail(error instanceof Error ? error.message : "Sağlayıcı bakiyesi alınamadı.", 500);
   }
 }

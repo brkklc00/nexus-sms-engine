@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     searchParams.get("providerId") ??
     (await prisma.user.findUnique({ where: { id: auth.user.id }, select: { defaultProviderId: true } }))?.defaultProviderId;
 
-  if (!providerId) return fail("Saglayici bulunamadi.", 404);
+  if (!providerId) return fail("Sağlayıcı bulunamadı.", 404);
   const balance = await providerBalance(providerId);
   return ok(balance);
 }

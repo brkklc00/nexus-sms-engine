@@ -1,19 +1,21 @@
+"use client";
+
 import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function AdminKaraListePage() {
   return (
     <ResourceTablePage
-      title="Musteri SMS Kara Liste"
-      description="Global ve kullanici bazli blacklist kayitlari."
+      title="Müşteri SMS Kara Liste"
+      description="Global ve kullanıcı bazlı blacklist kayıtları."
       endpoint="/api/admin/sms/blacklist"
       columns={[
         { key: "phoneE164", label: "Telefon" },
-        { key: "userId", label: "Kullanici" },
+        { key: "userId", label: "Kullanıcı" },
         { key: "source", label: "Kaynak" },
         { key: "reason", label: "Sebep" },
         {
           key: "createdAt",
-          label: "Olusturma",
+          label: "Oluşturma",
           render: (row) => new Date(String(row.createdAt)).toLocaleString("tr-TR"),
         },
       ]}

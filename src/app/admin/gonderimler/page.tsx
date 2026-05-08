@@ -1,19 +1,21 @@
+"use client";
+
 import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function AdminGonderimlerPage() {
   return (
     <ResourceTablePage
-      title="Tum SMS Gonderimler"
-      description="Kampanya kayitlarini canli API ile filtreleyin ve durumlarini izleyin."
+      title="Tüm SMS Gönderimler"
+      description="Kampanya kayıtlarını canlı API ile filtreleyin ve durumlarını izleyin."
       endpoint="/api/admin/sms/campaigns"
       columns={[
         { key: "name", label: "Kampanya" },
-        { key: "user.email", label: "Musteri" },
-        { key: "provider.name", label: "Saglayici" },
+        { key: "user.email", label: "Müşteri" },
+        { key: "provider.name", label: "Sağlayıcı" },
         { key: "status", label: "Durum" },
         { key: "totalCount", label: "Toplam" },
-        { key: "deliveredCount", label: "Basarili" },
-        { key: "failedCount", label: "Basarisiz" },
+        { key: "deliveredCount", label: "Başarılı" },
+        { key: "failedCount", label: "Başarısız" },
         {
           key: "createdAt",
           label: "Tarih",

@@ -40,12 +40,12 @@ export function SmsIndividualPanel() {
       body: JSON.stringify({ numbers, message, origin, providerId, queued: true }),
     });
     const json = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
-    setFeedback(response.ok && json?.ok !== false ? "Bireysel SMS kuyruga alindi." : (json?.message ?? "Gonderim basarisiz."));
+    setFeedback(response.ok && json?.ok !== false ? "Bireysel SMS kuyruğa alındı." : (json?.message ?? "Gönderim başarısız."));
   }
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Bireysel SMS" description="En fazla 10 aliciya bireysel SMS gonderin." badge="Canli Gonderim" />
+      <PageHeader title="Bireysel SMS" description="En fazla 10 alıcıya bireysel SMS gönderin." badge="Canlı Gönderim" />
       <section className="nexus-surface rounded-2xl p-5">
         {feedback ? <p className="mb-3 rounded-lg border border-indigo-400/30 bg-indigo-500/10 px-3 py-2 text-sm text-indigo-200">{feedback}</p> : null}
         <div className="grid gap-3 md:grid-cols-2">
@@ -62,7 +62,7 @@ export function SmsIndividualPanel() {
           value={numbersText}
           onChange={(e) => setNumbersText(e.target.value)}
           className="nexus-input mt-3 min-h-20 py-2 pl-3"
-          placeholder="Telefonlar (virgul, bosluk veya satir ile)"
+          placeholder="Telefonlar (virgül, boşluk veya satır ile)"
         />
         <textarea
           value={message}
@@ -71,17 +71,17 @@ export function SmsIndividualPanel() {
           placeholder="Mesaj metni"
         />
         <button onClick={() => void submit()} className="nexus-btn-primary mt-3 rounded-lg px-4 py-2 text-sm">
-          Gonder
+          Gönder
         </button>
       </section>
       <ResourceTablePage
-        title="Bireysel Gecmis"
-        description="Gonderilen bireysel SMS kayitlari"
+        title="Bireysel Geçmiş"
+        description="Gönderilen bireysel SMS kayıtları"
         endpoint="/api/sms/history/individual"
         columns={[
-          { key: "toPhone", label: "Alici" },
+          { key: "phoneE164", label: "Alıcı" },
           { key: "status", label: "Durum" },
-          { key: "costCredits", label: "Maliyet" },
+          { key: "cost", label: "Maliyet" },
           {
             key: "createdAt",
             label: "Tarih",
@@ -139,16 +139,16 @@ export function SmsBulkPanel() {
       }),
     });
     const json = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
-    setFeedback(response.ok && json?.ok !== false ? "Kampanya olusturuldu ve kuyruga alindi." : (json?.message ?? "Gonderim basarisiz."));
+    setFeedback(response.ok && json?.ok !== false ? "Kampanya oluşturuldu ve kuyruğa alındı." : (json?.message ?? "Gönderim başarısız."));
   }
 
   return (
     <div className="space-y-5">
-      <PageHeader title="SMS Gonder" description="Toplu kampanya olusturup canli kuyruga alin." badge="Bulk Send" />
+      <PageHeader title="SMS Gönder" description="Toplu kampanya oluşturup canlı kuyruğa alın." badge="Bulk Send" />
       <section className="nexus-surface rounded-2xl p-5">
         {feedback ? <p className="mb-3 rounded-lg border border-indigo-400/30 bg-indigo-500/10 px-3 py-2 text-sm text-indigo-200">{feedback}</p> : null}
         <div className="grid gap-3 md:grid-cols-2">
-          <input value={name} onChange={(e) => setName(e.target.value)} className="nexus-input py-2 pl-3" placeholder="Kampanya adi" />
+          <input value={name} onChange={(e) => setName(e.target.value)} className="nexus-input py-2 pl-3" placeholder="Kampanya adı" />
           <input value={origin} onChange={(e) => setOrigin(e.target.value)} className="nexus-input py-2 pl-3" placeholder="Origin" />
           <select value={providerId} onChange={(e) => setProviderId(e.target.value)} className="nexus-input py-2 pl-3">
             {providers.map((provider) => (
@@ -175,23 +175,23 @@ export function SmsBulkPanel() {
             value={numbersText}
             onChange={(e) => setNumbersText(e.target.value)}
             className="nexus-input mt-3 min-h-20 py-2 pl-3"
-            placeholder="Telefonlar (virgul, bosluk veya satir ile)"
+            placeholder="Telefonlar (virgül, boşluk veya satır ile)"
           />
         )}
         <textarea value={message} onChange={(e) => setMessage(e.target.value)} className="nexus-input mt-3 min-h-24 py-2 pl-3" placeholder="Mesaj metni" />
         <button onClick={() => void submit()} className="nexus-btn-primary mt-3 rounded-lg px-4 py-2 text-sm">
-          Kampanya Gonder
+          Kampanya Gönder
         </button>
       </section>
       <ResourceTablePage
-        title="Kampanya Gecmisi"
-        description="Kendi kampanyalariniz"
+        title="Kampanya Geçmişi"
+        description="Kendi kampanyalarınız"
         endpoint="/api/sms/campaigns"
         columns={[
           { key: "name", label: "Kampanya" },
           { key: "status", label: "Durum" },
           { key: "totalCount", label: "Toplam" },
-          { key: "deliveredCount", label: "Basarili" },
+          { key: "deliveredCount", label: "Başarılı" },
           {
             key: "createdAt",
             label: "Tarih",

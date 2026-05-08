@@ -1,3 +1,5 @@
+"use client";
+
 import { ResourceTablePage } from "@/components/resource-table-page";
 
 export default function SmsKampanyalarPage() {
