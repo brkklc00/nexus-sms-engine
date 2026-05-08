@@ -3,39 +3,9 @@ import { encryptSecret } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import { providerRegistry } from "@/modules/sms/providers/registry";
 
-const providerPublicSelect = {
-  id: true,
-  name: true,
-  slug: true,
-  type: true,
-  baseUrl: true,
-  isActive: true,
-  priority: true,
-  timeoutSeconds: true,
-  dailyLimit: true,
-  hourlyLimit: true,
-  targetRatePerSecond: true,
-  maxRatePerSecond: true,
-  warmupEnabled: true,
-  warmupStartRps: true,
-  warmupIncrementStep: true,
-  warmupMaxRps: true,
-  dailyCap: true,
-  hourlyCap: true,
-  minuteCap: true,
-  isThrottled: true,
-  throttleReason: true,
-  cooldownUntil: true,
-  lastError: true,
-  healthStatus: true,
-  createdAt: true,
-  updatedAt: true,
-} satisfies Prisma.SmsProviderSelect;
-
 export async function listProviders(includePassive = false) {
   return prisma.smsProvider.findMany({
-    where: includePassive ? { deletedAt: null } : { isActive: true, deletedAt: null },
-    select: providerPublicSelect,
+    where: includePassive ? {} : { isActive: true },
     orderBy: [{ priority: "asc" }, { createdAt: "desc" }],
   });
 }
@@ -48,27 +18,16 @@ export async function upsertProvider(
     update: {
       name: input.name,
       baseUrl: input.baseUrl,
-      type: input.type ?? "smtp",
       isActive: input.isActive,
       priority: input.priority,
       timeoutSeconds: input.timeoutSeconds,
       dailyLimit: input.dailyLimit ?? null,
       hourlyLimit: input.hourlyLimit ?? null,
-      targetRatePerSecond: input.targetRatePerSecond ?? 0.5,
-      maxRatePerSecond: input.maxRatePerSecond ?? 1,
-      warmupEnabled: input.warmupEnabled ?? true,
-      warmupStartRps: input.warmupStartRps ?? 0.2,
-      warmupIncrementStep: input.warmupIncrementStep ?? 0.2,
-      warmupMaxRps: input.warmupMaxRps ?? 2,
-      dailyCap: input.dailyCap ?? null,
-      hourlyCap: input.hourlyCap ?? null,
-      minuteCap: input.minuteCap ?? null,
       ...(input.token ? { tokenEncrypted: encryptSecret(input.token) } : {}),
     },
     create: {
       name: input.name,
       slug: input.slug,
-      type: input.type ?? "smtp",
       baseUrl: input.baseUrl,
       tokenEncrypted: encryptSecret(input.token ?? ""),
       isActive: input.isActive,
@@ -76,17 +35,7 @@ export async function upsertProvider(
       timeoutSeconds: input.timeoutSeconds,
       dailyLimit: input.dailyLimit ?? null,
       hourlyLimit: input.hourlyLimit ?? null,
-      targetRatePerSecond: input.targetRatePerSecond ?? 0.5,
-      maxRatePerSecond: input.maxRatePerSecond ?? 1,
-      warmupEnabled: input.warmupEnabled ?? true,
-      warmupStartRps: input.warmupStartRps ?? 0.2,
-      warmupIncrementStep: input.warmupIncrementStep ?? 0.2,
-      warmupMaxRps: input.warmupMaxRps ?? 2,
-      dailyCap: input.dailyCap ?? null,
-      hourlyCap: input.hourlyCap ?? null,
-      minuteCap: input.minuteCap ?? null,
     },
-    select: providerPublicSelect,
   });
 }
 
