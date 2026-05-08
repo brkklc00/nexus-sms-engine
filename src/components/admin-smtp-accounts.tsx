@@ -43,14 +43,12 @@ export function AdminSmtpAccounts() {
   const [rows, setRows] = useState<SmtpAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<{ type: "success" | "error" | "warning"; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const [confirmText, setConfirmText] = useState<string | null>(null);
-  const [addOpen, setAddOpen] = useState(false);
-  const [alibabaBulkOpen, setAlibabaBulkOpen] = useState(false);
 
   const [scope, setScope] = useState<BulkScope>("all_active");
   const [preset, setPreset] = useState<BulkPreset>("balanced");
@@ -139,10 +137,6 @@ export function AdminSmtpAccounts() {
   }
 
   async function applyBulk() {
-    if (scope === "selected" && selectedIds.length === 0) {
-      setFeedback({ type: "warning", message: "Seçili kapsam için en az bir SMTP hesabı seçmelisiniz." });
-      return;
-    }
     const affected = scope === "selected" ? selectedIds.length : rows.length;
     setConfirmText(`Bu işlem ${affected} SMTP hesabının rate/warmup ayarlarını güncelleyecek.`);
   }
@@ -175,21 +169,17 @@ export function AdminSmtpAccounts() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const json = (await response.json().catch(() => null)) as { ok?: boolean; error?: { message?: string }; data?: { updated?: number } } | null;
+    const json = (await response.json().catch(() => null)) as { ok?: boolean; error?: { message?: string } } | null;
     if (!response.ok || !json?.ok) {
-      setFeedback({ type: "error", message: json?.error?.message ?? "Toplu güncelleme başarısız." });
+      setFeedback(json?.error?.message ?? "Toplu güncelleme başarısız.");
       return;
     }
-    setFeedback({ type: "success", message: `${json.data?.updated ?? 0} SMTP hesabı güncellendi.` });
+    setFeedback("SMTP rate/warmup ayarları güncellendi.");
     setBulkOpen(false);
     await load();
   }
 
   async function applyResetThrottle() {
-    if (scope === "selected" && selectedIds.length === 0) {
-      setFeedback({ type: "warning", message: "Seçili kapsam için en az bir SMTP hesabı seçmelisiniz." });
-      return;
-    }
     const response = await fetch("/api/smtp/reset-throttle", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -200,105 +190,27 @@ export function AdminSmtpAccounts() {
         setHealthy,
       }),
     });
-    const json = (await response.json().catch(() => null)) as { ok?: boolean; error?: { message?: string }; data?: { updated?: number } } | null;
-    if (!response.ok || !json?.ok) {
-      setFeedback({ type: "error", message: json?.error?.message ?? "Throttle temizleme başarısız." });
-      return;
-    }
-    setFeedback({ type: "success", message: `${json.data?.updated ?? 0} SMTP hesabının throttle durumu temizlendi.` });
-    setResetOpen(false);
-    await load();
-  }
-
-  async function submitAddSmtp(formData: FormData) {
-    const payload = {
-      name: String(formData.get("name") ?? "").trim(),
-      slug: String(formData.get("slug") ?? "").trim(),
-      type: "smtp",
-      baseUrl: String(formData.get("baseUrl") ?? "").trim(),
-      token: String(formData.get("token") ?? "").trim(),
-      isActive: true,
-      priority: Number(formData.get("priority") ?? 100),
-      timeoutSeconds: Number(formData.get("timeoutSeconds") ?? 15),
-    };
-    const response = await fetch("/api/admin/sms/providers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
     const json = (await response.json().catch(() => null)) as { ok?: boolean; error?: { message?: string } } | null;
     if (!response.ok || !json?.ok) {
-      setFeedback({ type: "error", message: json?.error?.message ?? "SMTP hesabı eklenemedi." });
+      setFeedback(json?.error?.message ?? "Throttle temizleme başarısız.");
       return;
     }
-    setFeedback({ type: "success", message: "SMTP hesabı eklendi." });
-    setAddOpen(false);
-    await load();
-  }
-
-  async function submitBulkAlibaba(formData: FormData) {
-    const baseUrl = String(formData.get("baseUrl") ?? "").trim();
-    const lines = String(formData.get("accountsText") ?? "")
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
-    if (!baseUrl || lines.length === 0) {
-      setFeedback({ type: "warning", message: "Base URL ve hesap listesi zorunludur." });
-      return;
-    }
-
-    let success = 0;
-    for (const line of lines) {
-      const [name, slug, token] = line.split("|").map((part) => part.trim());
-      if (!name || !slug || !token) continue;
-      const response = await fetch("/api/admin/sms/providers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          slug,
-          type: "smtp",
-          baseUrl,
-          token,
-          isActive: true,
-          priority: 100,
-          timeoutSeconds: 15,
-        }),
-      });
-      const json = (await response.json().catch(() => null)) as { ok?: boolean } | null;
-      if (response.ok && json?.ok) success += 1;
-    }
-
-    setFeedback({ type: "success", message: `${success} Alibaba SMTP hesabı eklendi.` });
-    setAlibabaBulkOpen(false);
+    setFeedback("Rate limit/throttle durumu temizlendi.");
+    setResetOpen(false);
     await load();
   }
 
   return (
     <div className="space-y-5">
       <PageHeader title="SMTP Hesapları" description="SMTP hız ve warmup ayarlarını toplu yönetin." badge="Rate Control" />
-      {feedback ? (
-        <div
-          className={[
-            "rounded-xl border px-4 py-2 text-sm",
-            feedback.type === "success" ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200" : "",
-            feedback.type === "error" ? "border-rose-400/30 bg-rose-500/10 text-rose-200" : "",
-            feedback.type === "warning" ? "border-amber-400/30 bg-amber-500/10 text-amber-200" : "",
-          ].join(" ")}
-        >
-          {feedback.message}
-        </div>
-      ) : null}
+      {feedback ? <div className="rounded-xl border border-indigo-400/30 bg-indigo-500/10 px-4 py-2 text-sm text-indigo-200">{feedback}</div> : null}
       <section className="nexus-surface rounded-2xl p-4">
-        <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
-          <ActionButton onClick={() => setAlibabaBulkOpen(true)}>Bulk Add Alibaba SMTPs</ActionButton>
-          <ActionButton onClick={() => setAddOpen(true)}>Add SMTP</ActionButton>
-          <ActionButton variant="primary" onClick={() => setBulkOpen(true)}>Toplu Rate / Warmup Ayarla</ActionButton>
-          <ActionButton onClick={() => setResetOpen(true)}>Rate Limit / Throttle Temizle</ActionButton>
-        </div>
         <FilterBar>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="SMTP ara..." className="nexus-input max-w-sm py-2 pl-3" />
-          <p className="text-xs text-slate-400">Seçili SMTP: {selectedCount}</p>
+          <div className="flex gap-2">
+            <ActionButton variant="primary" onClick={() => setBulkOpen(true)}>Toplu Rate / Warmup Ayarla</ActionButton>
+            <ActionButton onClick={() => setResetOpen(true)}>Rate Limit / Throttle Temizle</ActionButton>
+          </div>
         </FilterBar>
         {loading ? <LoadingState lines={8} /> : null}
         {!loading && error ? <ErrorState description={error} onRetry={() => void load()} /> : null}
@@ -356,13 +268,10 @@ export function AdminSmtpAccounts() {
             <label className="text-sm text-slate-300">Scope</label>
             <select className="nexus-input py-2 pl-3" value={scope} onChange={(e) => setScope(e.target.value as BulkScope)}>
               <option value="all_active">Tüm aktif SMTP’ler</option>
-              <option value="selected" disabled={selectedCount === 0}>Sadece seçili SMTP’ler</option>
+              <option value="selected">Sadece seçili SMTP’ler</option>
               <option value="healthy">Sadece sağlıklı SMTP’ler</option>
-              <option value="error">Sadece hatalı SMTP’ler</option>
+              <option value="error">Sadece hata durumundaki SMTP’ler</option>
             </select>
-            {scope === "selected" && selectedCount === 0 ? (
-              <p className="text-xs text-amber-300">Bu kapsam için önce listeden SMTP seçmelisiniz.</p>
-            ) : null}
 
             <label className="text-sm text-slate-300">Preset</label>
             <select className="nexus-input py-2 pl-3" value={preset} onChange={(e) => setPresetValues(e.target.value as BulkPreset)}>
@@ -438,9 +347,9 @@ export function AdminSmtpAccounts() {
           <div className="grid gap-3">
             <select className="nexus-input py-2 pl-3" value={scope} onChange={(e) => setScope(e.target.value as BulkScope)}>
               <option value="all_active">Tüm aktif SMTP’ler</option>
-              <option value="selected" disabled={selectedCount === 0}>Sadece seçili SMTP’ler</option>
+              <option value="selected">Sadece seçili SMTP’ler</option>
               <option value="healthy">Sadece sağlıklı SMTP’ler</option>
-              <option value="error">Sadece hatalı SMTP’ler</option>
+              <option value="error">Sadece hata durumundaki SMTP’ler</option>
             </select>
             <label className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-200">
               <input type="checkbox" checked={includeAuthErrors} onChange={(e) => setIncludeAuthErrors(e.target.checked)} />
@@ -455,55 +364,6 @@ export function AdminSmtpAccounts() {
               <ActionButton variant="danger" onClick={() => void applyResetThrottle()}>Temizle</ActionButton>
             </div>
           </div>
-        </ModalFrame>
-      ) : null}
-
-      {addOpen ? (
-        <ModalFrame title="SMTP Hesabı Ekle" onClose={() => setAddOpen(false)}>
-          <form
-            className="grid gap-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void submitAddSmtp(new FormData(event.currentTarget));
-            }}
-          >
-            <input name="name" className="nexus-input py-2 pl-3" placeholder="SMTP adı" required />
-            <input name="slug" className="nexus-input py-2 pl-3" placeholder="Slug (benzersiz)" required />
-            <input name="baseUrl" className="nexus-input py-2 pl-3" placeholder="Base URL" required />
-            <input name="token" type="password" className="nexus-input py-2 pl-3" placeholder="API Token" required />
-            <div className="grid gap-2 md:grid-cols-2">
-              <input name="priority" type="number" className="nexus-input py-2 pl-3" placeholder="Öncelik" defaultValue={100} />
-              <input name="timeoutSeconds" type="number" className="nexus-input py-2 pl-3" placeholder="Timeout (sn)" defaultValue={15} />
-            </div>
-            <div className="flex justify-end gap-2">
-              <ActionButton onClick={() => setAddOpen(false)}>Vazgeç</ActionButton>
-              <ActionButton variant="primary" type="submit">Ekle</ActionButton>
-            </div>
-          </form>
-        </ModalFrame>
-      ) : null}
-
-      {alibabaBulkOpen ? (
-        <ModalFrame title="Bulk Add Alibaba SMTPs" onClose={() => setAlibabaBulkOpen(false)}>
-          <form
-            className="grid gap-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void submitBulkAlibaba(new FormData(event.currentTarget));
-            }}
-          >
-            <input name="baseUrl" className="nexus-input py-2 pl-3" placeholder="Alibaba Base URL" required />
-            <textarea
-              name="accountsText"
-              className="nexus-input min-h-36 py-2 pl-3"
-              placeholder={"Her satır: ad|slug|token"}
-              required
-            />
-            <div className="flex justify-end gap-2">
-              <ActionButton onClick={() => setAlibabaBulkOpen(false)}>Vazgeç</ActionButton>
-              <ActionButton variant="primary" type="submit">Toplu Ekle</ActionButton>
-            </div>
-          </form>
         </ModalFrame>
       ) : null}
 
