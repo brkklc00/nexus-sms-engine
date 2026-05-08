@@ -29,7 +29,8 @@ type ModalType =
   | { kind: "status"; user: UserItem }
   | { kind: "password"; user: UserItem }
   | { kind: "credit"; user: UserItem; creditType: "add" | "deduct" }
-  | { kind: "detail"; user: UserItem };
+  | { kind: "detail"; user: UserItem }
+  | { kind: "impersonate"; user: UserItem };
 
 function toNumber(value: string, fallback = 0) {
   const parsed = Number(value);
@@ -213,6 +214,19 @@ export function AdminUsersCrud() {
     setDetail(json.data ?? null);
   }
 
+  async function submitImpersonate(user: UserItem) {
+    const response = await fetch(`/api/admin/users/${user.id}/impersonate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    const json = (await response.json().catch(() => null)) as { ok?: boolean; data?: { redirectTo?: string }; error?: { message?: string } } | null;
+    if (!response.ok || !json?.ok) {
+      setToast({ type: "error", message: json?.error?.message ?? "Hesaba geçiş yapılamadı." });
+      return;
+    }
+    window.location.href = json.data?.redirectTo ?? "/dashboard";
+  }
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -315,6 +329,7 @@ export function AdminUsersCrud() {
                             <ActionButton onClick={() => setModal({ kind: "credit", user, creditType: "add" })}>Kredi Ekle</ActionButton>
                             <ActionButton onClick={() => setModal({ kind: "credit", user, creditType: "deduct" })}>Kredi Düş</ActionButton>
                             <ActionButton onClick={() => setModal({ kind: "password", user })}>Şifre Sıfırla</ActionButton>
+                            <ActionButton onClick={() => setModal({ kind: "impersonate", user })}>Kullanıcı Olarak Gir</ActionButton>
                             <ActionButton variant={user.isActive ? "danger" : "default"} onClick={() => setModal({ kind: "status", user })}>
                               {user.isActive ? "Pasif Yap" : "Aktif Yap"}
                             </ActionButton>
@@ -399,6 +414,16 @@ export function AdminUsersCrud() {
       ) : null}
       {modal?.kind === "detail" ? (
         <DetailModal user={modal.user} detail={detail} onClose={() => setModal(null)} />
+      ) : null}
+      {modal?.kind === "impersonate" ? (
+        <ConfirmModal
+          title="Kullanıcı hesabına geç"
+          description="Bu kullanıcı hesabına geçerek müşteri panelini onun yetkileriyle görüntüleyeceksiniz. Admin hesabınıza daha sonra geri dönebilirsiniz."
+          onClose={() => setModal(null)}
+          onConfirm={() => void submitImpersonate(modal.user)}
+          confirmText="Hesaba Geç"
+          confirmVariant="primary"
+        />
       ) : null}
     </div>
   );

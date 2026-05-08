@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ComponentType } from "react";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -61,6 +61,36 @@ export function AppShell({
   const pathname = usePathname();
   const items = role === "admin" ? adminNav : customerNav;
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [impersonation, setImpersonation] = useState<{
+    active: boolean;
+    targetUserEmail?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (role !== "customer") return;
+    void (async () => {
+      const response = await fetch("/api/auth/impersonation", { cache: "no-store" });
+      const json = (await response.json().catch(() => null)) as { ok?: boolean; data?: { active?: boolean; targetUserEmail?: string } } | null;
+      if (!response.ok || !json?.ok) {
+        setImpersonation({ active: false });
+        return;
+      }
+      setImpersonation({
+        active: Boolean(json.data?.active),
+        targetUserEmail: json.data?.targetUserEmail,
+      });
+    })();
+  }, [role, pathname]);
+
+  async function stopImpersonation() {
+    const response = await fetch("/api/auth/stop-impersonation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    const json = (await response.json().catch(() => null)) as { ok?: boolean; data?: { redirectTo?: string } } | null;
+    if (!response.ok || !json?.ok) return;
+    window.location.href = json.data?.redirectTo ?? "/admin/dashboard";
+  }
 
   return (
     <div className="nexus-bg min-h-screen text-slate-100">
@@ -102,6 +132,15 @@ export function AppShell({
                 </Link>
               ))}
             </nav>
+            {role === "customer" && impersonation?.active ? (
+              <button
+                onClick={() => void stopImpersonation()}
+                className="mt-2 flex items-center justify-center rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-amber-100 hover:bg-amber-500/20"
+                title="Admine Dön"
+              >
+                <span className="text-xs">Admine Dön</span>
+              </button>
+            ) : null}
             <button
               onClick={() => void signOut({ callbackUrl: "/login" })}
               className="mt-2 flex items-center justify-center rounded-xl border border-white/10 bg-slate-900/80 px-3 py-2 text-slate-300 hover:bg-slate-800 hover:text-white"
@@ -137,6 +176,17 @@ export function AppShell({
                 {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
               </button>
             </header>
+            {role === "customer" && impersonation?.active ? (
+              <div className="flex items-center justify-between rounded-2xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                <p>Şu anda {impersonation.targetUserEmail ?? "müşteri"} hesabını görüntülüyorsunuz.</p>
+                <button
+                  onClick={() => void stopImpersonation()}
+                  className="rounded-lg border border-amber-300/40 bg-amber-900/30 px-3 py-1.5 text-xs text-amber-100"
+                >
+                  Admine Dön
+                </button>
+              </div>
+            ) : null}
             <main className="space-y-5">{children}</main>
           </div>
         </div>

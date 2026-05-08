@@ -4,12 +4,14 @@ import { DataTable } from "@/components/data-table";
 import { ErrorState } from "@/components/error-state";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
-import { requireSession } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
-  const session = await requireSession();
-  const userId = session.user.id;
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  const userId = user.id;
   const [today, monthStart] = [new Date(), new Date()];
   today.setHours(0, 0, 0, 0);
   monthStart.setDate(1);

@@ -1,13 +1,15 @@
 import { PageHeader } from "@/components/page-header";
 import { ErrorState } from "@/components/error-state";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/api-auth";
+import { redirect } from "next/navigation";
 
 export default async function SmsHesabimPage() {
-  const session = await requireSession();
+  const userSession = await getCurrentUser();
+  if (!userSession) redirect("/login");
   const user = await prisma.user
     .findUnique({
-      where: { id: session.user.id },
+      where: { id: userSession.id },
       select: {
         name: true,
         email: true,
